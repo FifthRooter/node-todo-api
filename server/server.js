@@ -15,6 +15,25 @@ const port = process.env.PORT || 3000
 
 app.use(bodyParser.json())
 
+
+app.post('/users', (req, res) => {
+  console.log('New user joined!')
+  let body = _.pick(req.body, ['email', 'password'])
+
+  let user = new User(body)
+
+  user.save().then(() => {
+    return user.generateAuthToken()
+  })
+  .then((token) => {
+    res.header('x-auth', token).send(user)
+  })
+  .catch((e) => {
+    res.status(400).send(e)
+})
+})
+
+
 app.post('/todos', (req, res) => {
   console.log(req.body)
   let todo = new Todo({
@@ -79,6 +98,7 @@ app.patch('/todos/:id', (req, res) => {
       body.completed = false
       body.completedAt = null
   }
+
 
   Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
     if (!todo) {
